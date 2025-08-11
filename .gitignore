@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+*.whl
+
+# Rust
+target/
+Cargo.lock
+
+# Build artifacts
+build/
+*.so
+*.pyd
+*.dll
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
