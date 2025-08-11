@@ -1,17 +1,18 @@
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=ripgrep-src");
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let target = env::var("TARGET").unwrap();
     let host = env::var("HOST").unwrap();
 
-    // Always build ripgrep from source
-    let binary_path = build_ripgrep_from_source(&out_dir, &target, &host);
+    // Build ripgrep from submodule
+    let binary_path = build_ripgrep_from_submodule(&out_dir, &target, &host);
 
     // Copy binary to the sup package directory for distribution
     let binary_name = if target.contains("windows") {
@@ -30,21 +31,20 @@ fn main() {
     println!("Ripgrep binary copied to: {}", package_binary.display());
 }
 
-fn build_ripgrep_from_source(out_dir: &str, target: &str, host: &str) -> PathBuf {
-    let version = "14.1.0";
-    let ripgrep_dir = PathBuf::from(out_dir).join(format!("ripgrep-{}", version));
+fn build_ripgrep_from_submodule(out_dir: &str, target: &str, host: &str) -> PathBuf {
+    // Use the submodule
+    let ripgrep_dir = PathBuf::from("ripgrep-src");
 
-    // Download source if not present
     if !ripgrep_dir.exists() {
-        download_ripgrep_source(&ripgrep_dir, version);
+        panic!("ripgrep-src submodule not found! Run: git submodule update --init --recursive");
     }
 
-    println!("Building ripgrep from source for target: {}", target);
+    println!("Building ripgrep from submodule for target: {}", target);
 
     // Build ripgrep
     let mut cargo_cmd = Command::new("cargo");
     cargo_cmd.current_dir(&ripgrep_dir);
-    cargo_cmd.args(&["build", "--release"]);
+    cargo_cmd.args(&["build", "--release", "--bin", "rg"]);
 
     // Cross-compile if target != host
     if target != host {
@@ -83,69 +83,4 @@ fn build_ripgrep_from_source(out_dir: &str, target: &str, host: &str) -> PathBuf
     );
 
     dest_binary
-}
-
-fn download_ripgrep_source(dest_dir: &Path, version: &str) {
-    let url = format!(
-        "https://github.com/BurntSushi/ripgrep/archive/refs/tags/{}.tar.gz",
-        version
-    );
-
-    println!("Downloading ripgrep source from: {}", url);
-
-    let tar_path = dest_dir.with_extension("tar.gz");
-    let parent_dir = dest_dir.parent().unwrap();
-    fs::create_dir_all(parent_dir).unwrap();
-
-    // Download using git clone instead of curl for better reliability
-    // First try git clone
-    let git_url = format!("https://github.com/BurntSushi/ripgrep.git");
-    let status = Command::new("git")
-        .args(&[
-            "clone",
-            "--depth",
-            "1",
-            "--branch",
-            version,
-            &git_url,
-            dest_dir.to_str().unwrap(),
-        ])
-        .status();
-
-    if status.is_ok() && status.unwrap().success() {
-        println!("Successfully cloned ripgrep source using git");
-        return;
-    }
-
-    // Fallback to curl if git clone fails
-    println!("Git clone failed, falling back to curl...");
-
-    let status = Command::new("curl")
-        .args(&["-L", "-o", tar_path.to_str().unwrap(), &url])
-        .status()
-        .expect("Failed to download ripgrep source");
-
-    if !status.success() {
-        panic!("Failed to download ripgrep source from {}", url);
-    }
-
-    // Extract
-    let status = Command::new("tar")
-        .args(&[
-            "-xzf",
-            tar_path.to_str().unwrap(),
-            "-C",
-            parent_dir.to_str().unwrap(),
-        ])
-        .status()
-        .expect("Failed to extract ripgrep source");
-
-    if !status.success() {
-        panic!("Failed to extract ripgrep source");
-    }
-
-    // Clean up
-    fs::remove_file(tar_path).ok();
-
-    println!("Successfully downloaded and extracted ripgrep source");
 }

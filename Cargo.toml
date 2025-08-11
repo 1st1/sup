@@ -9,11 +9,15 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.22", features = ["extension-module"] }
-grep = "0.3"
-grep-regex = "0.1"
-grep-searcher = "0.1"
+# Use ripgrep's internal crates directly from submodule
+grep = { path = "ripgrep-src/crates/grep" }
+grep-searcher = { path = "ripgrep-src/crates/searcher" }
+grep-regex = { path = "ripgrep-src/crates/regex" }
+grep-matcher = { path = "ripgrep-src/crates/matcher" }
+grep-printer = { path = "ripgrep-src/crates/printer" }
+ignore = { path = "ripgrep-src/crates/ignore" }
+# For binary invocation
 walkdir = "2"
-ignore = "0.4"
 
 # No build dependencies needed - using system commands for git/curl/tar
 
