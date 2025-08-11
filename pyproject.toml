@@ -34,3 +34,4 @@ sup-rg = "sup:ripgrep_cli"
 [tool.maturin]
 features = ["pyo3/extension-module"]
 module-name = "sup._sup"
+include = ["sup/bin/*"]
