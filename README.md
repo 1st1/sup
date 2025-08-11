@@ -1,4 +1,6 @@
-# sup
+# EXPERIMENT: DO NOT USE THIS OR DEPEND ON THIS
+
+------------
 
 A Python package with Rust-based ripgrep implementation using maturin. This package bundles the full ripgrep binary alongside a Python search API.
 
