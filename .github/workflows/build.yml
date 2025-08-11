@@ -36,15 +36,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform.target }}
-      - name: Install cross-compilation tools
-        if: matrix.platform.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -52,9 +43,6 @@ jobs:
           args: --release --out dist --interpreter python3.13
           sccache: 'true'
           manylinux: auto
-          before-script-linux: |
-            # Ensure we have git and build tools for compiling ripgrep from source
-            yum install -y git gcc || apt-get update && apt-get install -y git build-essential
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -72,13 +60,6 @@ jobs:
             target: i686-pc-windows-msvc
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -102,13 +83,6 @@ jobs:
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
